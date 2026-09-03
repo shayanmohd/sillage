@@ -1,0 +1,35 @@
+{
+  "app": "Sillage",
+  "org": "SocialSure Private Limited",
+  "site": "https://shayanmohd.github.io/sillage/",
+  "email": "shayanm2002@gmail.com",
+  "bg": "#F6F1E5",
+  "fg": "#1D2019",
+  "muted": "#4E5447",
+  "hair": "#DBD3BF",
+  "accent": "#94551A",
+  "bgDark": "#14160F",
+  "fgDark": "#ECE5D4",
+  "mutedDark": "#ADA694",
+  "hairDark": "#343829",
+  "accentDark": "#DFA353",
+  "fontFamily": "'Spectral', Iowan Old Style, Palatino, Georgia, serif",
+  "fontCss": "fonts/fonts.css",
+  "permissions": [
+    ["VIBRATE", "One short tap when an entry is saved or a drill answer is marked, and a soft double pulse when an old entry resurfaces. That is the whole of it."],
+    ["POST_NOTIFICATIONS", "The training reminder you set, and a note on the days one of your own entries has an anniversary. Every notification is written on this device out of words you typed, and you choose the hour."]
+  ],
+  "network": false,
+  "collects": [],
+  "storage": "Every entry, anchor line, note tag, bottle, wear, drill result and setting is written to this device's private app storage. Nothing is uploaded, nothing is backed up to us, and nothing is shared. Uninstalling the app deletes all of it, which is why Sillage can export the whole notebook as JSON or CSV at any time from Settings, and can erase everything in two taps.",
+  "extra": [
+    ["Your camera and your photographs", "Sillage has no camera permission and no photo picker. It cannot open the camera and it cannot read your gallery. The bottles on your shelf are drawn in code from the name and the notes you typed, which is why every shelf looks different without a single photograph being taken."],
+    ["Your location", "There is no location permission. The place on an entry is a line of text you typed, nothing more. The hemisphere setting is a two-way switch you choose yourself, used only to decide whether October is autumn or spring for you."],
+    ["The internet", "Sillage does not request the INTERNET permission, so Android will not let it open a connection even by accident. There is no account, no sync, no analytics, no crash reporter and no advertising identifier. You can confirm the permission list on the Play listing before you install."],
+    ["Notifications", "Reminders are scheduled on the device through Android's alarm manager. No push service is involved and no message travels over a network. If you turn reminders off in Settings, the whole schedule is cancelled."],
+    ["Prices on your shelf", "If you record what a bottle cost, that number stays on the device with everything else and is used only to work out cost per wear. Settings has a switch that hides prices on screen for when you hand your phone to somebody."],
+    ["Export and import", "Exporting writes a plain file into this device's Downloads folder using your own tap. It is not encrypted, so treat it the way you would treat a diary. The file leaves the device only if you choose to send it somewhere yourself. Importing reads a file you pick and merges it into what is already here."],
+    ["Analytics", "There are none, opt in or otherwise. Sillage does not count how often you open it, how many entries you write or how well you score. It has no way to tell us anything, because it has no network permission at all."],
+    ["Training is a hobby, not a treatment", "The drills in Sillage are written as skill practice for people who want to smell better, in the same spirit as ear training or wine tasting. They are not a medical programme and the app makes no claim about smell loss or recovery. If you have lost your sense of smell, or it has changed suddenly, please speak to a doctor rather than an app."]
+  ]
+}
