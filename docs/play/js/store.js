@@ -228,12 +228,18 @@ const Store = (() => {
     return { list, total: list.length, byFamily };
   }
 
-  /** Cumulative distinct terms, one point per week, for the growth chart. */
+  /** Cumulative distinct terms, one point per week, for the growth chart.
+      The window starts at the week of the first word rather than a fixed sixteen weeks
+      back, because a chart of fourteen flat zeroes and one vertical jump is a chart of
+      nothing. Under three weeks of history there is no curve to draw, so it returns none. */
   function vocabGrowth(weeks) {
     const uses = Object.values(vocabUses());
     if (!uses.length) return [];
-    const w = weeks || 16;
     const now = startOfDay(Date.now());
+    const first = Math.min(...uses.map(u => u.firstAt));
+    const span = Math.ceil((now - startOfDay(first)) / (7 * DAY)) + 1;
+    if (span < 3) return [];
+    const w = Math.min(weeks || 16, Math.max(3, span));
     const out = [];
     for (let i = w - 1; i >= 0; i--) {
       const cut = now - i * 7 * DAY + DAY;
@@ -339,6 +345,14 @@ const Store = (() => {
   }
   function bottle(id) { return db.bottles.find(b => b.id === id) || null; }
 
+  /** A price is never negative and never NaN; an empty field means the user did not say. */
+  function cleanPrice(v) {
+    if (v === '' || v === null || v === undefined) return null;
+    const n = Number(v);
+    if (!isFinite(n)) return null;
+    return Math.max(0, n);
+  }
+
   function addBottle(o) {
     const name = String(o.name || '').trim();
     if (!name) return null;
@@ -346,11 +360,11 @@ const Store = (() => {
       id: uid('b'),
       name,
       house: String(o.house || '').trim(),
-      sizeMl: Number(o.sizeMl) || null,
+      sizeMl: Number(o.sizeMl) > 0 ? Math.min(1000, Math.round(Number(o.sizeMl))) : null,
       status: o.status || 'bottle',
       acquiredAt: o.acquiredAt || Date.now(),
       addedAt: Date.now(),
-      price: o.price === '' || o.price === undefined ? null : Number(o.price),
+      price: cleanPrice(o.price),
       notes: Array.isArray(o.notes) ? o.notes : [],
       take: o.take || { opening: '', heart: '', drydown: '' },
       sillage: o.sillage || null,
@@ -365,8 +379,8 @@ const Store = (() => {
   function updateBottle(id, patch) {
     const b = bottle(id); if (!b) return null;
     Object.assign(b, patch);
-    if (b.price === '' ) b.price = null;
-    if (b.price !== null && b.price !== undefined) b.price = Number(b.price);
+    b.price = cleanPrice(b.price);
+    b.sizeMl = Number(b.sizeMl) > 0 ? Math.min(1000, Math.round(Number(b.sizeMl))) : null;
     save();
     return b;
   }
@@ -378,14 +392,19 @@ const Store = (() => {
     save();
   }
 
+  /* A wear is a record of something that already happened. A date picker will happily
+     hand back the year 2099, and one of those poisons every statistic on the page:
+     days-since goes negative, the month strip lights up January, and "unworn" inverts. */
   function logWear(bottleId, o) {
     if (!bottle(bottleId)) return null;
+    const asked = (o && o.at) || Date.now();
+    const sprays = Number(o && o.sprays);
     const w = {
       id: uid('w'),
       bottleId,
-      at: (o && o.at) || Date.now(),
+      at: Math.min(asked, Date.now()),
       contexts: (o && o.contexts) || [],
-      sprays: (o && o.sprays) || null
+      sprays: sprays > 0 ? Math.min(99, Math.round(sprays)) : null
     };
     db.wears.push(w);
     save();
@@ -536,19 +555,11 @@ const Store = (() => {
     }
     const wasEmpty = db.entries.length === 0 && db.bottles.length === 0;
     let added = 0;
-    const seenE = new Set(db.entries.map(e => e.at + '|' + e.text));
-    for (const e of j.entries) {
-      const k = e.at + '|' + e.text;
-      if (seenE.has(k)) continue;
-      db.entries.push({
-        id: uid('e'), at: e.at, text: e.text || '', anchor: e.anchor || '',
-        tags: e.tags || [], feeling: e.feeling || null, place: e.place || '',
-        people: e.people || [], bottleId: null
-      });
-      seenE.add(k); added++;
-    }
+    /* Bottles first: an entry and a wear both point at one by id, and the ids are
+       reissued on the way in. Restoring a backup used to drop every "wearing" link
+       on the floor because the entries were rebuilt before this map existed. */
     const map = {};
-    const seenB = new Set(db.bottles.map(b => (b.house + '|' + b.name).toLowerCase()));
+    const seenB = new Set(db.bottles.map(b => ((b.house || '') + '|' + b.name).toLowerCase()));
     for (const b of (j.bottles || [])) {
       const k = ((b.house || '') + '|' + (b.name || '')).toLowerCase();
       if (seenB.has(k)) {
@@ -558,6 +569,17 @@ const Store = (() => {
       }
       const nb = addBottle(b);
       if (nb) { map[b.id] = nb.id; seenB.add(k); added++; }
+    }
+    const seenE = new Set(db.entries.map(e => e.at + '|' + e.text));
+    for (const e of j.entries) {
+      const k = e.at + '|' + e.text;
+      if (seenE.has(k)) continue;
+      db.entries.push({
+        id: uid('e'), at: e.at, text: e.text || '', anchor: e.anchor || '',
+        tags: e.tags || [], feeling: e.feeling || null, place: e.place || '',
+        people: e.people || [], bottleId: map[e.bottleId] || null
+      });
+      seenE.add(k); added++;
     }
     const seenW = new Set(db.wears.map(w => w.bottleId + '|' + w.at));
     for (const w of (j.wears || [])) {

@@ -1,7 +1,3 @@
-First release.
+A new look. Sillage now has a mark of its own: a scent trail that runs under every screen head, drawn empty states instead of apologies, and a redrawn icon in plum, magenta and gold.
 
-Sillage is a diary for smells, a training programme for your nose, and a record of what is on your shelf.
-
-Write a scent entry in forty seconds with a comparison anchor, and it comes back on the anniversary and in the same week next year. Thirty eight blind training sessions using your own kitchen. 352 lexicon cards, and a vocabulary that grows as you use them.
-
-No account, no cloud, no ads, and no internet permission at all.
+Fixes: restoring a backup kept your entries but dropped which bottle each one was written in. A fast double tap on Save wrote the entry twice. A wear dated in the future broke the shelf figures. Leaving mid drill threw the round away.

@@ -10,34 +10,34 @@ Sillage: Scent Diary & Nose
 ## Short description (75 / 80)
 Journal smells, train your nose, log your perfumes. Offline, private, free.
 
-## Full description (3992 / 4000)
+## Full description (3994 / 4000)
 You have ten thousand photographs and not one smell.
 
 Smell is wired straight into memory's basement. One molecule of a stranger's perfume on a train and you are, involuntarily, in a hallway in 1998. We built whole industries for what we see and hear, and almost nothing for the sense that time travels.
 
-Sillage is three things at once: a diary for smells, a training programme for your nose, and a record of your shelf. It is entirely offline and holds no account.
+Sillage is three things at once: a diary for smells, a training programme for your nose, and a record of your shelf. It is entirely offline and holds no account. Every graphic in it, from the trail under the screen heads to the bottles on your shelf, is drawn in code, not photographed.
 
 THE DIARY THAT TIME TRAVELS
 
 An entry takes about forty seconds. What you smelled, note tags from a lexicon of 352 cards, an emotion wheel that tints the entry in the stream, the place, the people, the bottle you were wearing.
 
-Then the part that matters: the anchor. You cannot record a smell, but you can encode one, and articulation is the encoding. The field hands you a sentence shape and asks for one line of comparison. Like wet cardboard and oranges, but warmer. Nine parts wet stone, one part hot butter.
+Then the part that matters: the anchor. You cannot record a smell, but you can encode one, and articulation is the encoding. The field hands you a sentence shape and asks for one line of comparison. Like wet cardboard and oranges, but warmer.
 
 Entries come back. On the anniversary, and on the same week of the year, so the first cold morning of autumn brings back last year's first cold morning.
 
 TRAIN YOUR NOSE LIKE A PALATE
 
-Thirty eight sessions across two tracks, five minutes or less each.
+Thirty eight sessions across two tracks. The first ones take four minutes, the widest take twelve.
 
 Foundations: fourteen sessions on four things you already own, coffee, a lemon, cloves and mint. Attention first, then description, then blind identification, then memory span.
 
 The Pantry Conservatory: twenty four sessions across eight shelves of your own kitchen, four jars widening to eight.
 
-You shuffle the jars and you mark yourself, because the app cannot smell anything. It says so on the screen. A miss is worth more than a hit: it is how the app knows which shelf to send you back to, and which card to put in front of you.
+You shuffle the jars and you mark yourself, because the app cannot smell anything. It says so on the screen. A miss is worth more than a hit: it is how the app knows which shelf to send you back to.
 
 YOUR NOSE, CHARTED
 
-Identification accuracy across every scored session. Vocabulary growth, the count of words you have actually used out of 352. The longest gap you have carried a smell across and still picked it out. Accuracy per shelf, and what gets past you.
+Identification accuracy across every scored session. Vocabulary growth, the words you have actually used out of 352. The longest gap you have carried a smell across and still picked it out. Accuracy per shelf, and what gets past you.
 
 YOUR SHELF, FINALLY ORGANISED
 
@@ -49,7 +49,7 @@ Every bottle is drawn in code from its own name and notes, so the shelf looks li
 
 WORDS FOR WHAT YOU SMELL
 
-352 cards across fifteen families, from the citrus grove to the animalic cellar to the vocabulary of the craft. What it is, where you meet it, what sits nearby.
+352 cards across fifteen families, from the citrus grove to the animalic cellar. What it is, where you meet it, what sits nearby.
 
 Every card lists the entries and bottles where you have used it, so the lexicon is a map of your own nose rather than a glossary.
 
@@ -57,7 +57,7 @@ NOTHING LEAVES YOUR PHONE
 
 Sillage does not request the internet permission, so Android will not let it open a connection at all. You can check that on this listing before you install.
 
-No account, no sign in, no cloud, no analytics, no crash reporter, no advertising identifier. No camera permission, no photo picker, no location permission. Export everything as JSON or CSV whenever you like, or erase all of it in two taps.
+No account, no cloud, no analytics, no crash reporter, no advertising identifier. No camera permission, no photo picker, no location permission. Export everything as JSON or CSV whenever you like, or erase all of it in two taps.
 
 WHAT SILLAGE DOES NOT DO
 
@@ -67,7 +67,7 @@ The training is written as a hobby, in the spirit of ear training or wine tastin
 
 FREE AND COMPLETE
 
-Every entry, every bottle, every session and all 352 cards. No paid tier, no subscription, no in-app purchase, no ads.
+Every entry, every bottle, every session and all 352 cards. No paid tier, no subscription, no ads.
 
 ## Contact
 Email: shayanm2002@gmail.com
@@ -107,5 +107,6 @@ Privacy policy: https://shayanmohd.github.io/sillage/privacy-policy.html
   gambling, no user-to-user communication, no location sharing, no shared user-generated content. Lexicon
   cards describe smells including animalic and bodily ones (sweat, skin, leather, indole) in plain
   descriptive language; there is nothing sexual or graphic in them.
-- AI-generated assets: none. The icon and feature graphic are drawn procedurally in code from
-  `store/brand.json`; the six screenshots are captures of the running app.
+- AI-generated assets: none. The icon and the feature graphic are hand-written SVG and HTML in
+  `store/icon.svg` and `store/feature.html`, rendered by `_shiptools/render-brand.js`; the six
+  screenshots are captures of the running app.

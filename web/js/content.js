@@ -108,7 +108,7 @@ const Content = (() => {
   /* ---------- Foundations ----------
      Fourteen sessions on four household anchors. The structure is the one used
      in smell-training protocols, written here as skill practice rather than
-     therapy. Each session is five minutes or less. */
+     therapy. The early ones take four minutes; the last of them take eight. */
   const F = (day, title, kind, mins, mats, brief, teach) =>
     ({ id: 'f' + day, track: 'foundations', day, title, kind, mins, mats, brief, teach });
 

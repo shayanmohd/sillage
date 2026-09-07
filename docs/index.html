@@ -13,16 +13,18 @@
 <style>
   :root {
     color-scheme: light dark;
-    --paper: #F6F1E5; --paper-2: #EFE8D8; --paper-3: #E7DFCB;
-    --ink: #1D2019; --soft: #4E5447; --faint: #626857;
-    --hair: #DBD3BF; --accent: #94551A; --accent-ink: #F6F1E5;
+    --paper: #F7F2E9; --paper-2: #F1EADD; --paper-3: #E9DFCE;
+    --ink: #221A20; --soft: #574C53; --faint: #6A5D63;
+    --hair: #DED2C4; --accent: #9B2D63; --accent-deep: #75204C; --accent-ink: #FFF6F1;
+    --plum: #5A1B46; --gold: #D79A34;
     --sans: "Archivo", "Helvetica Neue", system-ui, -apple-system, sans-serif;
     --serif: "Spectral", Iowan Old Style, Palatino, Georgia, serif;
   }
   @media (prefers-color-scheme: dark) {
-    :root { --paper: #14160F; --paper-2: #1E211A; --paper-3: #262A21;
-            --ink: #ECE5D4; --soft: #ADA694; --faint: #948D7C;
-            --hair: #343829; --accent: #DFA353; --accent-ink: #14160F; }
+    :root { --paper: #141014; --paper-2: #1F1820; --paper-3: #2B212C;
+            --ink: #EFE5E5; --soft: #B4A4AC; --faint: #9C8B94;
+            --hair: #3A2C39; --accent: #F182B8; --accent-deep: #D2599A; --accent-ink: #1B0F17;
+            --plum: #8E3A6C; --gold: #E8B85C; }
   }
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
@@ -35,13 +37,14 @@
        line-height: 1.1; letter-spacing: -0.018em; margin: 0 0 16px; }
   .eyebrow { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--faint);
              margin: 0 0 14px; font-weight: 600; }
-  .cta { display: inline-block; background: var(--accent); color: var(--accent-ink); text-decoration: none;
-         padding: 14px 28px; border-radius: 3px; font-size: 17px; border: 1px solid var(--accent); }
+  .cta { display: inline-block; background: linear-gradient(158deg, var(--accent), var(--accent-deep));
+         color: var(--accent-ink); text-decoration: none;
+         padding: 14px 28px; border-radius: 3px; font-size: 17px; border: 1px solid var(--accent-deep); }
   .cta:hover { opacity: .92; }
 
   nav { display: flex; align-items: center; justify-content: space-between; height: 86px; }
   .mark { display: flex; align-items: center; gap: 12px; font-family: var(--serif); font-size: 22px; }
-  .mark svg { width: 32px; height: 32px; display: block; }
+  .mark svg { width: 34px; height: 34px; display: block; }
   nav a { color: var(--soft); text-decoration: none; font-size: 15px; margin-left: 24px; }
   nav a:hover { color: var(--ink); }
 
@@ -142,13 +145,22 @@
 <div class="wrap">
   <nav>
     <span class="mark">
-      <svg viewBox="0 0 108 108" aria-hidden="true">
-        <g fill="none" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="33,21 24,54 33,87" stroke="currentColor" stroke-width="3" opacity=".38"/>
-          <polyline points="50,31 42,54 50,77" stroke="currentColor" stroke-width="3.6" opacity=".62"/>
-          <polyline points="66,42 59,54 66,66" stroke="currentColor" stroke-width="4.2"/>
-        </g>
-        <circle cx="80" cy="54" r="9" fill="#94551A"/>
+      <svg viewBox="20 16 68 76" aria-hidden="true">
+        <defs>
+          <linearGradient id="mkbase" x1="0.5" y1="1" x2="0.5" y2="0">
+            <stop offset="0" stop-color="var(--plum)"/><stop offset="1" stop-color="var(--accent)"/>
+          </linearGradient>
+          <linearGradient id="mklift" x1="0.5" y1="1" x2="0.5" y2="0">
+            <stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--gold)"/>
+          </linearGradient>
+        </defs>
+        <path d="M54 84C42 76 42 66 54 58c12-8 12-17.5 1.5-24" fill="none" stroke="url(#mkbase)"
+              stroke-width="10.8" stroke-linecap="round" pathLength="100" stroke-dasharray="44 200"/>
+        <path d="M54 84C42 76 42 66 54 58c12-8 12-17.5 1.5-24" fill="none" stroke="var(--accent)"
+              stroke-width="8.4" stroke-linecap="round" pathLength="100" stroke-dasharray="36 200" stroke-dashoffset="-40"/>
+        <path d="M54 84C42 76 42 66 54 58c12-8 12-17.5 1.5-24" fill="none" stroke="url(#mklift)"
+              stroke-width="5.2" stroke-linecap="round" pathLength="100" stroke-dasharray="21 200" stroke-dashoffset="-72"/>
+        <path d="M55.5 34c-5-3.2-5-7.5.5-9.5" fill="none" stroke="var(--gold)" stroke-width="3.2" stroke-linecap="round"/>
       </svg>
       Sillage
     </span>
@@ -167,7 +179,7 @@
       <p class="under">Free and complete. No account, no subscription, and no internet permission at all.</p>
     </div>
     <img class="shot" src="shots/01-journal.png" width="1080" height="1920"
-         alt="The Journal screen: a memory from one year ago today at the top, then a stream of scent entries with note tags and a coloured edge for the feeling.">
+         alt="The Journal screen: the trail drawn under the masthead, a memory from one year ago today, then a stream of scent entries with note tags and a coloured edge for the feeling.">
   </header>
 </div>
 
@@ -200,14 +212,14 @@
 </section>
 
 <section class="gallery wrap" id="train">
-  <h2>Training that fits in five minutes and a kitchen cupboard</h2>
-  <p class="lead">Thirty eight sessions across two tracks. Foundations works on four things you already own:
-    coffee, a lemon, cloves and mint. The Pantry Conservatory then takes eight shelves of your own kitchen,
-    four jars at a time, and widens to eight.</p>
+  <h2>Training that fits in a kitchen cupboard</h2>
+  <p class="lead">Thirty eight sessions across two tracks, from four minutes to twelve. Foundations works on
+    four things you already own: coffee, a lemon, cloves and mint. The Pantry Conservatory then takes eight
+    shelves of your own kitchen, four jars at a time, and widens to eight.</p>
   <div class="strip">
     <figure>
       <img class="shot" src="shots/03-drill.png" width="1080" height="1920"
-           alt="A blind identification round: jar four of six, a shortlist of remaining materials, and the jars already named listed underneath.">
+           alt="A blind identification round: jar six of eight, a shortlist of the materials still unnamed, and the jars already named or missed listed underneath.">
       <figcaption><b>Blind, and honestly scored.</b> You shuffle the jars and you mark yourself, because the
         app cannot smell anything. It says so on the screen, and the number means what it says.</figcaption>
     </figure>

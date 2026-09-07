@@ -17,6 +17,7 @@
   <section class="screen" id="onboard" hidden>
     <div class="ob-track">
       <article class="ob-card" data-step="0">
+        <span class="ob-mark" id="obMark" aria-hidden="true"></span>
         <p class="ob-kicker">Sillage</p>
         <h1 class="ob-line">You have ten thousand photographs and not one smell.</h1>
         <p class="ob-sub">Smell reaches memory before it reaches language. One molecule of a stranger's perfume and you are in a hallway in 1998, involuntarily, completely.</p>
@@ -38,7 +39,7 @@
       </article>
 
       <article class="ob-card" data-step="2">
-        <h2 class="ob-line small">Five minutes, most mornings.</h2>
+        <h2 class="ob-line small">A few minutes, most mornings.</h2>
         <p class="ob-sub">Training is short and it uses what is already in your kitchen. Coffee, a lemon, cloves and mint will get you through the first week.</p>
         <div class="field row spread">
           <div><label for="obRemind">Remind me to train</label>
@@ -68,7 +69,8 @@
 
   <!-- JOURNAL -->
   <section class="screen view" id="v-journal" hidden>
-    <div class="topbar">
+    <div class="topbar mast tall">
+      <span class="mastart" id="mastJournal" aria-hidden="true"></span>
       <div>
         <p class="eyebrow" id="journalDay"></p>
         <h1 class="title">Journal</h1>
@@ -81,18 +83,22 @@
         <input type="search" id="entrySearch" placeholder="A note, a place, a feeling" aria-label="Search your entries">
       </div>
       <div id="entryStream"></div>
-      <p class="empty" id="journalEmpty" hidden>Nothing here yet. The next thing you smell will do.</p>
+      <div id="journalEmpty" hidden></div>
       <p class="effort" id="weekLine"></p>
     </div>
     <button class="fab" id="newEntry" aria-label="New entry">
-      <span class="fabmark" aria-hidden="true"></span>
+      <svg class="fabmark" viewBox="16 16 76 76" aria-hidden="true" focusable="false">
+        <path d="M54 84C42 76 42 66 54 58c12-8 12-17.5 1.5-24" stroke-width="7"/>
+        <path d="M55.5 34c-5-3.2-5-7.5.5-9.5" stroke-width="4.6"/>
+      </svg>
       <span class="fabtext">Log a smell</span>
     </button>
   </section>
 
   <!-- TRAIN -->
   <section class="screen view" id="v-train" hidden>
-    <div class="topbar">
+    <div class="topbar mast">
+      <span class="mastart" id="mastTrain" aria-hidden="true"></span>
       <div>
         <p class="eyebrow" id="trainEyebrow"></p>
         <h1 class="title">Train</h1>
@@ -110,7 +116,8 @@
 
   <!-- SHELF -->
   <section class="screen view" id="v-shelf" hidden>
-    <div class="topbar">
+    <div class="topbar mast">
+      <span class="mastart" id="mastShelf" aria-hidden="true"></span>
       <div>
         <p class="eyebrow" id="shelfCount"></p>
         <h1 class="title">Shelf</h1>
@@ -120,14 +127,15 @@
     <div class="scroller">
       <div id="shelfStats"></div>
       <div id="bottleGrid" class="grid"></div>
-      <p class="empty" id="shelfEmpty" hidden>An empty shelf. Add the bottle you wore today, and the wear log starts paying you back in about a fortnight.</p>
+      <div id="shelfEmpty" hidden></div>
       <div id="neglected"></div>
     </div>
   </section>
 
   <!-- LEXICON -->
   <section class="screen view" id="v-lexicon" hidden>
-    <div class="topbar">
+    <div class="topbar mast">
+      <span class="mastart" id="mastLexicon" aria-hidden="true"></span>
       <div>
         <p class="eyebrow" id="lexEyebrow"></p>
         <h1 class="title">Lexicon</h1>
@@ -173,7 +181,7 @@
         <div class="half"><label for="ePlace">Place</label>
           <input type="text" id="ePlace" maxlength="80" autocomplete="off" placeholder="Rua da Bica, Lisbon"></div>
         <div class="half"><label for="ePeople">Who was there</label>
-          <input type="text" id="ePeople" maxlength="120" autocomplete="off" placeholder="Names, separated by commas"></div>
+          <input type="text" id="ePeople" maxlength="120" autocomplete="off" placeholder="Comma separated"></div>
       </div>
       <div class="field">
         <label for="eBottle">Wearing</label>
@@ -317,7 +325,7 @@
 <div id="sheetTags" class="sheet" hidden>
   <div class="sheet-panel tall">
     <p class="sheet-title">Notes</p>
-    <input type="search" id="tagSearch" placeholder="Search 352 cards" aria-label="Search notes">
+      <input type="search" id="tagSearch" placeholder="Search the lexicon" aria-label="Search notes">
     <div id="tagResults" class="taglist"></div>
     <div class="btnrow end">
       <button class="btn" id="tagDone">Done</button>

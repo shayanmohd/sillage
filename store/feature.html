@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face { font-family: "Display"; src: url("display.ttf"); }
+  html, body { margin: 0; width: 1024px; height: 500px; overflow: hidden; }
+  body {
+    position: relative; color: #FBEFF4; font-family: "Display", Georgia, serif;
+    background:
+      radial-gradient(26% 40% at 26% 84%, rgba(246, 200, 104, 0.26), rgba(246, 200, 104, 0) 68%),
+      radial-gradient(52% 84% at 26% 84%, rgba(232, 87, 159, 0.42), rgba(232, 87, 159, 0) 62%),
+      radial-gradient(38% 46% at 24% 16%, rgba(246, 200, 104, 0.16), rgba(246, 200, 104, 0) 70%),
+      radial-gradient(120% 130% at 30% 100%, #5A1B46 0%, #3A1030 46%, #1E0A1B 100%);
+  }
+  .grain { position: absolute; inset: 0; opacity: 0.09; mix-blend-mode: overlay;
+    background-image: repeating-radial-gradient(circle at 19% 41%, rgba(255,255,255,0.9) 0 0.6px, transparent 0.6px 3.2px),
+                      repeating-radial-gradient(circle at 67% 73%, rgba(255,255,255,0.7) 0 0.5px, transparent 0.5px 2.8px); }
+  .mote { position: absolute; border-radius: 50%; background: #F6C868; }
+  svg.mark { position: absolute; left: 52px; top: 18px; width: 438px; height: 438px; }
+  .copy { position: absolute; left: 486px; top: 150px; width: 500px; }
+  h1 { margin: 0; font-size: 112px; line-height: 1; letter-spacing: -0.03em; font-weight: 700;
+       text-shadow: 0 6px 34px rgba(20, 4, 15, 0.55); }
+  p { margin: 22px 0 0 4px; font-size: 31px; line-height: 1.24; color: #F3B7D5; max-width: 470px; }
+  .rule { position: absolute; left: 490px; top: 130px; width: 78px; height: 5px; border-radius: 3px;
+          background: linear-gradient(90deg, #D8479A, #F5C260); }
+</style>
+</head>
+<body>
+  <div class="grain"></div>
+  <div class="mote" style="left:604px;top:78px;width:4px;height:4px;opacity:.75"></div>
+  <div class="mote" style="left:876px;top:132px;width:3px;height:3px;opacity:.55"></div>
+  <div class="mote" style="left:742px;top:52px;width:2px;height:2px;opacity:.5"></div>
+  <div class="mote" style="left:948px;top:404px;width:3px;height:3px;opacity:.4"></div>
+  <div class="mote" style="left:432px;top:96px;width:3px;height:3px;opacity:.5"></div>
+
+  <svg class="mark" viewBox="20 12 68 84" aria-hidden="true">
+    <defs>
+      <linearGradient id="base" x1="0.5" y1="1" x2="0.5" y2="0">
+        <stop offset="0" stop-color="#7A2054"/><stop offset="1" stop-color="#D8479A"/>
+      </linearGradient>
+      <linearGradient id="lift" x1="0.5" y1="1" x2="0.5" y2="0">
+        <stop offset="0" stop-color="#F06CB4"/><stop offset="1" stop-color="#F5C260"/>
+      </linearGradient>
+      <radialGradient id="tip">
+        <stop offset="0" stop-color="#FFE9B8" stop-opacity="0.95"/>
+        <stop offset="0.45" stop-color="#F3B44C" stop-opacity="0.45"/>
+        <stop offset="1" stop-color="#F3B44C" stop-opacity="0"/>
+      </radialGradient>
+      <filter id="halo" filterUnits="userSpaceOnUse" x="0" y="0" width="108" height="108">
+        <feGaussianBlur stdDeviation="4.6"/>
+      </filter>
+      <filter id="drop" filterUnits="userSpaceOnUse" x="0" y="0" width="108" height="108">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="2.4"/><feOffset dy="2.6" result="o"/>
+        <feFlood flood-color="#14040F" flood-opacity="0.6"/><feComposite in2="o" operator="in"/>
+        <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <path d="M54 84C42 76 42 66 54 58c12-8 12-17.5 1.5-24" fill="none" stroke="#E8579F"
+          stroke-width="13" stroke-linecap="round" opacity="0.5" filter="url(#halo)"/>
+    <g filter="url(#drop)">
+      <path d="M54 84C42 76 42 66 54 58c12-8 12-17.5 1.5-24" fill="none" stroke="url(#base)"
+            stroke-width="11.6" stroke-linecap="round" pathLength="100" stroke-dasharray="44 200"/>
+      <path d="M54 84C42 76 42 66 54 58c12-8 12-17.5 1.5-24" fill="none" stroke="#DE4E9C"
+            stroke-width="8.4" stroke-linecap="round" pathLength="100" stroke-dasharray="36 200" stroke-dashoffset="-40"/>
+      <path d="M54 84C42 76 42 66 54 58c12-8 12-17.5 1.5-24M55.5 34c-5-3.2-5-7.5.5-9.5" fill="none"
+            stroke="url(#lift)" stroke-width="5.2" stroke-linecap="round" pathLength="100"
+            stroke-dasharray="21 200" stroke-dashoffset="-72"/>
+      <path d="M55.5 34c-5-3.2-5-7.5.5-9.5" fill="none" stroke="#F5C260" stroke-width="3.2" stroke-linecap="round"/>
+    </g>
+    <path d="M50.4 80.6C41.6 73.6 42.6 65.6 51.6 58.8" fill="none" stroke="#FFE3F1"
+          stroke-width="1.6" stroke-linecap="round" opacity="0.42"/>
+    <circle cx="56" cy="24.5" r="8.5" fill="url(#tip)"/>
+  </svg>
+
+  <div class="rule"></div>
+  <div class="copy">
+    <h1>Sillage</h1>
+    <p>A diary for your most neglected sense.</p>
+  </div>
+</body>
+</html>

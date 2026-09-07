@@ -58,7 +58,27 @@ const App = (() => {
     const sp = cut.lastIndexOf(' ');
     return (sp > n * 0.5 ? cut.slice(0, sp) : cut).replace(/[\s,;:.]+$/, '');
   };
-  const money = v => Store.settings().currency + (Math.round(v * 100) / 100).toLocaleString(undefined, { maximumFractionDigits: 2 });
+  const money = v => {
+    const n = Math.round(Number(v) * 100) / 100;
+    const frac = n % 1 === 0 ? 0 : 2;
+    return Store.settings().currency + n.toLocaleString(undefined, { minimumFractionDigits: frac, maximumFractionDigits: 2 });
+  };
+  const plural = (n, one, many) => n + ' ' + (n === 1 ? one : (many || one + 's'));
+  /** A primary action that writes: swallow the second and third tap of a fast double tap.
+      Without this a double tap on Save writes the entry twice, which is the quietest way
+      an app can duplicate somebody's day. A refusal (a returned false) does not latch, so
+      "write something first" then a real save still works. */
+  function once(fn) {
+    let busy = false;
+    return function (...a) {
+      if (busy) return;
+      busy = true;
+      const r = fn.apply(this, a);
+      if (r === false) busy = false;
+      else setTimeout(() => { busy = false; }, 700);
+      return r;
+    };
+  }
 
   function download(name, mime, text) {
     if (N && N.saveFile) {
@@ -88,6 +108,12 @@ const App = (() => {
     const sc = $('#v-' + name + ' .scroller');
     if (sc) sc.scrollTop = 0;
     render(name);
+    const el = $('#v-' + name);
+    if (el) {
+      el.classList.add('is-fresh');
+      clearTimeout(show._fresh);
+      show._fresh = setTimeout(() => el.classList.remove('is-fresh'), 750);
+    }
   }
 
   function render(name) {
@@ -103,6 +129,13 @@ const App = (() => {
 
   function anySheetOpen() { return $$('.sheet').some(s => !s.hidden); }
   function closeSheets() { for (const s of $$('.sheet')) s.hidden = true; }
+  /** The note picker opens on top of the bottle editor. Back closes the picker and leaves
+      the half written bottle where it was; a second Back closes that. */
+  function topSheet() {
+    const open = $$('.sheet').filter(s => !s.hidden);
+    if (!open.length) return null;
+    return open.sort((a, b) => Number(getComputedStyle(b).zIndex || 0) - Number(getComputedStyle(a).zIndex || 0))[0];
+  }
 
   /* ================= JOURNAL ================= */
   function renderJournal() {
@@ -130,14 +163,20 @@ const App = (() => {
     const q = $('#entrySearch').value;
     const list = Store.searchEntries(q);
     const all = Store.entries();
-    $('#journalEmpty').hidden = all.length > 0;
+    const blank = $('#journalEmpty');
+    blank.hidden = all.length > 0;
+    if (!all.length) {
+      blank.innerHTML = Art.blank('journal', 'The bottle is still stoppered.',
+        'The next thing you smell will do. Coffee counts, so does the bus.',
+        { label: 'Write the first one', attr: 'data-newentry=""' });
+    }
     $('#entrySearch').parentElement.hidden = all.length < 4;
 
     $('#entryStream').innerHTML = list.map(e => {
       const f = Content.feeling(e.feeling);
       const b = e.bottleId ? Store.bottle(e.bottleId) : null;
-      const meta = [Store.ago(e.at), e.place, b ? 'wearing ' + b.name : '', (e.people || []).join(', ')]
-        .filter(Boolean).join(' · ');
+      const meta = [Store.ago(e.at), clip(e.place, 44), b ? 'wearing ' + clip(b.name, 30) : '',
+                    clip((e.people || []).join(', '), 40)].filter(Boolean).join(' · ');
       return '<article class="ecard" data-entry="' + e.id + '"' + (f ? ' style="--feel:' + f.hue + '"' : '') + '>' +
         '<p class="em">' + esc(meta) + '</p>' +
         '<p class="et">' + esc(clip(e.text, 260)) + '</p>' +
@@ -148,7 +187,8 @@ const App = (() => {
     }).join('');
 
     if (list.length === 0 && all.length) {
-      $('#entryStream').innerHTML = '<p class="empty">Nothing matches that.</p>';
+      $('#entryStream').innerHTML = Art.blank('nothing', 'Nothing matches that.',
+        'Search runs over what you wrote, the anchor, the place, the people and every note you tagged.');
     }
 
     const w = Store.weekCount();
@@ -174,8 +214,9 @@ const App = (() => {
     $('#entryWhen').textContent = editing ? Store.longDate(editing.at) : 'A new entry';
     $('#eDelete').hidden = !editing;
     const sel = $('#eBottle');
+    const linked = editing && editing.bottleId;
     sel.innerHTML = '<option value="">Nothing, or not sure</option>' + Store.bottles()
-      .filter(b => b.status !== 'rehomed')
+      .filter(b => b.status !== 'rehomed' || b.id === linked)
       .map(b => '<option value="' + b.id + '">' + esc(b.name) + (b.house ? ', ' + esc(b.house) : '') + '</option>').join('');
     sel.value = editing && editing.bottleId ? editing.bottleId : '';
     paintEntry();
@@ -185,7 +226,8 @@ const App = (() => {
 
   function paintEntry() {
     $('#eTags').innerHTML = draft.tags.length
-      ? draft.tags.map(t => '<button class="chip on" data-untag="' + t + '">' + esc(termName(t)) + '<span class="x">×</span></button>').join('')
+      ? draft.tags.map(t => '<button class="chip on" data-untag="' + t + '">' + esc(termName(t)) +
+          Art.icon('close', 'x') + '</button>').join('')
       : '<span class="help">No notes yet.</span>';
     $('#eWheel').innerHTML = Art.wheel(draft.feeling, 250);
     const f = Content.feeling(draft.feeling);
@@ -199,7 +241,7 @@ const App = (() => {
 
   function saveEntry() {
     const text = $('#eText').value.trim();
-    if (!text) { toast('Write what you smelled first.'); $('#eText').focus(); return; }
+    if (!text) { toast('Write what you smelled first.'); $('#eText').focus(); return false; }
     const payload = {
       text,
       anchor: $('#eAnchor').value.trim(),
@@ -327,10 +369,13 @@ const App = (() => {
   function runTimer(secs, onDone) {
     stopTimer();
     drill.left = secs;
+    /* The screen is painted before the timer starts, so write the full count
+       straight away. Without this the clock reads 0 for its first second. */
+    const paintClock = () => { const el = $('#drillClock'); if (el) el.textContent = drill.left; };
+    paintClock();
     drill.timer = setInterval(() => {
       drill.left--;
-      const el = $('#drillClock');
-      if (el) el.textContent = drill.left;
+      paintClock();
       if (drill.left <= 0) { stopTimer(); tap(24, 140); onDone(); }
     }, 1000);
   }
@@ -519,7 +564,7 @@ const App = (() => {
       return;
     }
     if (action === 'finish') { finishDrill(); return; }
-    if (action === 'save') { saveDrill(); return; }
+    if (action === 'save') { saveDrillOnce(); return; }
   }
 
   function stepAttend() {
@@ -550,6 +595,7 @@ const App = (() => {
     plan();
     toast('Session recorded.');
   }
+  const saveDrillOnce = once(saveDrill);
 
   /* ================= SHELF ================= */
   function renderShelf() {
@@ -558,7 +604,13 @@ const App = (() => {
     $('#shelfCount').textContent = bs.length
       ? bs.length + (bs.length === 1 ? ' bottle' : ' bottles') + (s.decants ? ', ' + s.decants + ' of them small' : '')
       : 'Nothing on it yet';
-    $('#shelfEmpty').hidden = bs.length > 0;
+    const sblank = $('#shelfEmpty');
+    sblank.hidden = bs.length > 0;
+    if (!bs.length) {
+      sblank.innerHTML = Art.blank('shelf', 'Room for everything.',
+        'Add the bottle you wore today. About a fortnight later the log starts paying you back.',
+        { label: 'Add a bottle', attr: 'data-addbottle="1"' });
+    }
 
     const st = $('#shelfStats');
     if (s.wears >= 3) {
@@ -630,7 +682,7 @@ const App = (() => {
       h += '<h2 class="sub">What the log says</h2><div class="statrow">' +
         '<div class="s"><div class="sv">' + s.wears + '</div><div class="sl">wears</div></div>' +
         '<div class="s"><div class="sv">' + Math.round(100 * s.reachRate) + '%</div><div class="sl">reach for</div></div>' +
-        '<div class="s"><div class="sv">' + (s.costPerWear !== null && show$ ? money(s.costPerWear) : Store.seasonLabel(s.topSeason).slice(0, 3)) +
+        '<div class="s"><div class="sv">' + (s.costPerWear !== null && show$ ? money(s.costPerWear) : Store.seasonLabel(s.topSeason)) +
           '</div><div class="sl">' + (s.costPerWear !== null && show$ ? 'per wear' : 'season') + '</div></div></div>' +
         Art.monthStrip(s.months, 'Wears by month');
       const ctx = Object.keys(s.contexts).sort((a, b2) => s.contexts[b2] - s.contexts[a]);
@@ -667,7 +719,7 @@ const App = (() => {
     if (ws.length) {
       h += '<h2 class="sub">Wear history</h2>' + ws.slice(0, 14).map(w =>
         '<div class="wearrow"><span>' + esc(Store.longDate(w.at)) +
-        (w.sprays ? ' <span class="wc">' + w.sprays + ' sprays</span>' : '') + '</span>' +
+        (w.sprays ? ' <span class="wc">' + plural(w.sprays, 'spray') + '</span>' : '') + '</span>' +
         '<span class="wc">' + esc((w.contexts || []).map(c =>
           (Content.CONTEXTS.find(x => x.id === c) || {}).label || c).join(', ')) +
         ' <button data-unwear="' + w.id + '">remove</button></span></div>').join('');
@@ -689,6 +741,7 @@ const App = (() => {
     $('#bSize').value = b && b.sizeMl ? b.sizeMl : '';
     $('#bPrice').value = b && b.price !== null && b.price !== undefined ? b.price : '';
     $('#bAcquired').value = Store.ymd(b ? b.acquiredAt : Date.now());
+    $('#bAcquired').max = Store.ymd(Date.now());
     $('#bStatus').innerHTML = Content.STATUSES.map(s =>
       '<option value="' + s.id + '">' + esc(s.label) + '</option>').join('');
     $('#bStatus').value = b ? b.status : 'bottle';
@@ -704,7 +757,8 @@ const App = (() => {
 
   function paintBottleSheet() {
     $('#bNotes').innerHTML = bottleEditing.notes.length
-      ? bottleEditing.notes.map(t => '<button class="chip on" data-unnote="' + t + '">' + esc(termName(t)) + '<span class="x">×</span></button>').join('')
+      ? bottleEditing.notes.map(t => '<button class="chip on" data-unnote="' + t + '">' + esc(termName(t)) +
+          Art.icon('close', 'x') + '</button>').join('')
       : '<span class="help">Optional. Notes decide the colour of the glass on your shelf.</span>';
     $('#bSillage').innerHTML = Content.SILLAGE_SCALE.map(s =>
       '<button class="chip' + (bottleEditing.sillage === s.id ? ' on' : '') + '" data-sil="' + s.id + '">' + esc(s.label) + '</button>').join('');
@@ -714,7 +768,7 @@ const App = (() => {
 
   function saveBottleSheet() {
     const name = $('#bName').value.trim();
-    if (!name) { toast('It needs a name.'); $('#bName').focus(); return; }
+    if (!name) { toast('It needs a name.'); $('#bName').focus(); return false; }
     const payload = {
       name,
       house: $('#bHouse').value.trim(),
@@ -748,6 +802,7 @@ const App = (() => {
     $('#wearTitle').textContent = 'Wearing ' + b.name;
     $('#wearSprays').value = '';
     $('#wearDate').value = Store.ymd(Date.now());
+    $('#wearDate').max = Store.ymd(Date.now());
     paintWear();
     $('#sheetWear').hidden = false;
   }
@@ -783,13 +838,16 @@ const App = (() => {
       const res = Lexicon.search(q).slice(0, 80);
       body.innerHTML = res.length
         ? res.map(n => lexRow(n, v)).join('')
-        : '<p class="empty">No card by that name.</p>';
+        : Art.blank('nothing', 'No card by that name.',
+            'Try a shorter word. The search reads the card bodies as well as the terms.');
       return;
     }
 
     if (lex.mine) {
       if (!v.total) {
-        body.innerHTML = '<p class="empty">Your vocabulary starts at zero and grows the moment you tag an entry or write the word into one.</p>';
+        body.innerHTML = Art.blank('lexicon', 'Your side of the atlas is blank.',
+          'A word becomes yours the moment you tag an entry with it, or simply write it into one.',
+          { label: 'Browse all ' + Lexicon.count + ' cards', attr: 'data-lexall="1"' });
         return;
       }
       const growth = Store.vocabGrowth(16);
@@ -847,7 +905,11 @@ const App = (() => {
       (e.tags || []).includes(n.id) || Lexicon.termsIn(e.text + ' ' + e.anchor).includes(n.id));
     const bottles = Store.bottles().filter(b => (b.notes || []).includes(n.id));
 
-    let h = '<div class="cardview"><h1>' + esc(n.t) + '</h1>' +
+    const famNodes = Lexicon.byFamily(n.f);
+    const famKnown = Store.vocab().byFamily[n.f] || 0;
+    let h = '<div class="cardview">' +
+      Art.familyBadge(fam, famKnown, famNodes.length).replace('class="fbadge"', 'class="fbadge cbadge"') +
+      '<h1>' + esc(n.t) + '</h1>' +
       '<p class="cw">' + esc(n.w) + '</p>' +
       '<p class="co">' + esc(n.o) + '</p>';
 
@@ -870,7 +932,7 @@ const App = (() => {
         '<div class="rowlink" data-bottle="' + b.id + '"><span class="rl">' + esc(b.name) + '</span>' +
         '<span class="rr">' + esc(b.house || '') + '</span></div>').join('');
     }
-    const near = Lexicon.byFamily(n.f).filter(x => x.id !== n.id && !n.r.includes(x.id));
+    const near = famNodes.filter(x => x.id !== n.id && !n.r.includes(x.id));
     const start = Art.hash(n.id) % Math.max(1, near.length - 6);
     h += '<h2 class="sub">More from ' + esc(fam.name.replace(/^The /, '')) + '</h2>' +
       near.slice(start, start + 6).map(x =>
@@ -892,9 +954,9 @@ const App = (() => {
 
     let h = '';
     if (!sess.length) {
-      h += '<p class="empty">Nothing measured yet. Run one session and this page starts drawing.</p>' +
-           '<button class="btn accent wide" data-goto="train">Go to Train</button>';
-      $('#skillBody').innerHTML = h;
+      $('#skillBody').innerHTML = Art.blank('skill', 'No curve yet.',
+        'Run one session and this page starts drawing: accuracy, vocabulary, memory span, and the shelf that keeps beating you.',
+        { label: 'Go to Train', attr: 'data-goto="train"' });
       return;
     }
 
@@ -905,8 +967,10 @@ const App = (() => {
     if (acc.length > 1) {
       h += Art.accuracyCurve(acc);
       const l = avg(last5), f = avg(first5);
-      h += '<p class="help long">' + acc.length + ' scored sessions. Your last five average ' + l + ' percent' +
-        (acc.length >= 6 && f !== null ? ', against ' + f + ' percent for your first five.' : '.') +
+      const recent = acc.length >= 6 ? 'Your last five average ' + l + ' percent, against ' +
+                     f + ' percent for your first five.'
+                   : 'Across all of them you average ' + avg(acc) + ' percent.';
+      h += '<p class="help long">' + plural(acc.length, 'scored session') + '. ' + recent +
         ' You mark yourself, so this number is a record of your honesty as much as your nose.</p>';
     } else {
       h += '<p class="help long">One scored session so far. The curve needs two.</p>';
@@ -923,7 +987,7 @@ const App = (() => {
     }
 
     h += '<h2 class="sub">Memory span</h2>' +
-      '<p class="bignum">' + (span ? span + ' <small>SECONDS</small>' : 'not yet');
+      '<p class="bignum">' + (span ? span + ' <small>' + (span === 1 ? 'SECOND' : 'SECONDS') + '</small>' : 'not yet');
     h += '</p><p class="help long">' + (span
       ? 'The longest gap you have carried a smell across and still picked it out.'
       : 'Run a recall session and this fills in.') + '</p>';
@@ -988,7 +1052,7 @@ const App = (() => {
       out.push({
         id: id++,
         at: d.getTime(),
-        title: 'Five minutes for your nose',
+        title: 'A few minutes for your nose',
         body: next
           ? next.title + '. You will need ' + next.mats.slice(0, 3).map(m =>
               ((Content.material(m) || {}).name || m).toLowerCase()).join(', ') + '.'
@@ -1088,6 +1152,9 @@ const App = (() => {
     const gotoEl = t.closest('[data-goto]');
     if (gotoEl) { show(gotoEl.dataset.goto); return; }
 
+    if (t.closest('[data-addbottle]')) { openBottleSheet(null); return; }
+    if (t.closest('[data-lexall]')) { lex.mine = false; lex.family = null; renderLexicon(); return; }
+
     const wearEl = t.closest('[data-wear]');
     if (wearEl) { openWear(wearEl.dataset.wear); return; }
 
@@ -1141,16 +1208,17 @@ const App = (() => {
     }
 
     const dr = t.closest('[data-drill]');
-    if (dr) { advanceDrill(dr.dataset.drill); return; }
+    if (dr) { if (!drill) return; advanceDrill(dr.dataset.drill); return; }
 
     const ld = t.closest('[data-ladder]');
-    if (ld) { drill.results.push({ mat: ld.dataset.ladder }); tap(8, 80); paintDrill(); return; }
+    if (ld) { if (!drill) return; drill.results.push({ mat: ld.dataset.ladder }); tap(8, 80); paintDrill(); return; }
 
     const gs = t.closest('[data-guess]');
-    if (gs) { drill.guess = gs.dataset.guess; paintDrill(); return; }
+    if (gs) { if (!drill) return; drill.guess = gs.dataset.guess; paintDrill(); return; }
 
     const vd = t.closest('[data-verdict]');
     if (vd) {
+      if (!drill) return;
       const hit = vd.dataset.verdict === 'hit';
       if (drill.s.kind === 'recall') {
         drill.results.push({ mat: drill.target, ok: hit, guess: hit ? null : drill.guess });
@@ -1169,6 +1237,7 @@ const App = (() => {
 
     const tr = t.closest('[data-truth]');
     if (tr) {
+      if (!drill) return;
       drill.results.push({ mat: tr.dataset.truth, ok: false, guess: drill.guess });
       tap(20, 140);
       nextIdRound();
@@ -1212,7 +1281,7 @@ const App = (() => {
 
     $('#newEntry').onclick = () => { tap(); openEntry(null); };
     $('#entryCancel').onclick = () => { editing = null; back() || show('journal'); };
-    $('#entrySave').onclick = saveEntry;
+    $('#entrySave').onclick = once(saveEntry);
     $('#eAddTag').onclick = () => openTags('entry');
     $('#eSuggest').onclick = () => {
       const found = Lexicon.termsIn($('#eText').value + ' ' + $('#eAnchor').value)
@@ -1259,7 +1328,7 @@ const App = (() => {
     };
 
     $('#addBottle').onclick = () => openBottleSheet(null);
-    $('#bSave').onclick = saveBottleSheet;
+    $('#bSave').onclick = once(saveBottleSheet);
     $('#bCancel').onclick = () => { $('#sheetBottle').hidden = true; };
     $('#bAddNote').onclick = () => openTags('bottle');
     $('#bDelete').onclick = () => {
@@ -1276,7 +1345,7 @@ const App = (() => {
     };
 
     $('#wearCancel').onclick = () => { $('#sheetWear').hidden = true; };
-    $('#wearSave').onclick = saveWear;
+    $('#wearSave').onclick = once(saveWear);
 
     $('#setRemind').onchange = e => {
       Store.settings({ remindOn: e.target.checked });
@@ -1329,7 +1398,24 @@ const App = (() => {
     });
   }
 
+  /** The one mark, in every place the app introduces itself. */
+  function paintMarks() {
+    const journal = $('#mastJournal');
+    if (journal) journal.innerHTML = Art.trailRule({ id: 'j' });
+    for (const [id, key] of [['#mastTrain', 't'], ['#mastShelf', 's'], ['#mastLexicon', 'x']]) {
+      const el = $(id);
+      if (el) el.innerHTML = Art.trailRule({ id: key, halo: false });
+    }
+    const ob = $('#obMark');
+    if (ob) ob.innerHTML = Art.trail({ id: 'o' });
+    const labels = { journal: 'Journal', train: 'Train', shelf: 'Shelf', lexicon: 'Lexicon' };
+    for (const b of $$('.tab')) {
+      b.innerHTML = Art.icon(b.dataset.view) + '<span class="tlab">' + labels[b.dataset.view] + '</span>';
+    }
+  }
+
   function init() {
+    paintMarks();
     bind();
     if (Store.onboarded()) startApp();
     else { $('#onboard').hidden = false; renderOb(); }
@@ -1337,7 +1423,8 @@ const App = (() => {
 
   /* ---------- the Android shell calls these ---------- */
   function back() {
-    if (anySheetOpen()) { closeSheets(); return true; }
+    const sheet = topSheet();
+    if (sheet) { sheet.hidden = true; return true; }
     if (view === 'drill') { stopTimer(); drill = null; show('train'); return true; }
     if (view === 'lexicon' && (lex.family || lex.mine)) { lex.family = null; lex.mine = false; renderLexicon(); return true; }
     if (stack.length) { const prev = stack.pop(); show(prev); return true; }
@@ -1347,9 +1434,17 @@ const App = (() => {
 
   function onPause() { stopTimer(); }
 
+  /* Coming back to a round in progress keeps it. Answering the phone in the middle of a
+     blind set used to throw the whole round away, which is a cruel thing to do to six
+     jars of correctly named spice. Only the clock is restarted, from where it stopped. */
   function onResume() {
     if (!Store.onboarded()) return;
-    if (drill && drill.phase !== 'done') { drill = null; show('train'); }
+    if (drill && !drill.timer) {
+      if (drill.phase === 'attend') runTimer(drill.left || drill.s.hold || 20, stepAttend);
+      else if (drill.phase === 'recall-wait') {
+        runTimer(drill.left || drill.s.wait || 60, () => { drill.phase = 'recall-find'; drill.guess = null; paintDrill(); });
+      }
+    }
     render(view);
     plan();
   }

@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="108" height="108">
+  <!-- Sillage: the trail a scent leaves. One ribbon lifting out of the dark, plum at the
+       base, magenta through the body, gold where it goes. The taper is the same spine
+       drawn four times with a dash window over each quarter, each narrower than the last;
+       round caps hide the joins and a stroke can carry a gradient where a tapered fill
+       cannot. The mark is the app: the same curl is the nose button and the first screen. -->
+  <defs>
+    <radialGradient id="field" cx="0.5" cy="0.82" r="0.95">
+      <stop offset="0" stop-color="#5A1B46"/>
+      <stop offset="0.5" stop-color="#3A1030"/>
+      <stop offset="1" stop-color="#1E0A1B"/>
+    </radialGradient>
+    <radialGradient id="bloom" cx="0.52" cy="0.72" r="0.46">
+      <stop offset="0" stop-color="#E8579F" stop-opacity="0.55"/>
+      <stop offset="0.55" stop-color="#C13B84" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#C13B84" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="crown" cx="0.55" cy="0.24" r="0.34">
+      <stop offset="0" stop-color="#F6C868" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#F6C868" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="base" x1="0.5" y1="1" x2="0.5" y2="0">
+      <stop offset="0" stop-color="#7A2054"/>
+      <stop offset="1" stop-color="#D8479A"/>
+    </linearGradient>
+    <linearGradient id="lift" x1="0.5" y1="1" x2="0.5" y2="0">
+      <stop offset="0" stop-color="#F06CB4"/>
+      <stop offset="1" stop-color="#F5C260"/>
+    </linearGradient>
+    <radialGradient id="source" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#F6C868" stop-opacity="0.42"/>
+      <stop offset="0.6" stop-color="#E8579F" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#E8579F" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="tip">
+      <stop offset="0" stop-color="#FFE9B8" stop-opacity="0.95"/>
+      <stop offset="0.45" stop-color="#F3B44C" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#F3B44C" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="halo" filterUnits="userSpaceOnUse" x="0" y="0" width="108" height="108">
+      <feGaussianBlur stdDeviation="4.6"/>
+    </filter>
+    <filter id="drop" filterUnits="userSpaceOnUse" x="0" y="0" width="108" height="108">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2.4"/>
+      <feOffset dy="2.6" result="o"/>
+      <feFlood flood-color="#14040F" flood-opacity="0.6"/>
+      <feComposite in2="o" operator="in"/>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <g id="bg">
+    <rect width="108" height="108" fill="url(#field)"/>
+    <rect width="108" height="108" fill="url(#bloom)"/>
+    <rect width="108" height="108" fill="url(#crown)"/>
+    <circle cx="76" cy="27" r="1.1" fill="#F6C868" opacity="0.65"/>
+    <circle cx="31" cy="35" r="0.8" fill="#F6C868" opacity="0.45"/>
+    <circle cx="83" cy="49" r="0.7" fill="#F8D08A" opacity="0.4"/>
+    <circle cx="24" cy="63" r="0.6" fill="#F8D08A" opacity="0.3"/>
+    <!-- the light the trail is leaving: a source, so the ribbon reads as smoke and not a shape -->
+    <ellipse cx="52" cy="80" rx="26" ry="12" fill="url(#source)"/>
+  </g>
+
+  <!-- scaled about the centre so the widest part of the ribbon clears the r=33 mask -->
+  <g id="fg" transform="translate(54 54) scale(0.87) translate(-54 -54)">
+    <!-- the glow the ribbon throws on the field behind it -->
+    <path d="M54 84C42 76 42 66 54 58c12-8 12-17.5 1.5-24" fill="none" stroke="#E8579F"
+          stroke-width="13" stroke-linecap="round" opacity="0.5" filter="url(#halo)"/>
+    <g filter="url(#drop)">
+      <path d="M54 84C42 76 42 66 54 58c12-8 12-17.5 1.5-24" fill="none" stroke="url(#base)"
+            stroke-width="10.8" stroke-linecap="round"
+            pathLength="100" stroke-dasharray="44 200" stroke-dashoffset="0"/>
+      <path d="M54 84C42 76 42 66 54 58c12-8 12-17.5 1.5-24" fill="none" stroke="#DE4E9C"
+            stroke-width="8.4" stroke-linecap="round"
+            pathLength="100" stroke-dasharray="36 200" stroke-dashoffset="-40"/>
+      <path d="M54 84C42 76 42 66 54 58c12-8 12-17.5 1.5-24M55.5 34c-5-3.2-5-7.5.5-9.5"
+            fill="none" stroke="url(#lift)" stroke-width="5.2" stroke-linecap="round"
+            pathLength="100" stroke-dasharray="21 200" stroke-dashoffset="-72"/>
+      <path d="M55.5 34c-5-3.2-5-7.5.5-9.5" fill="none" stroke="#F5C260"
+            stroke-width="3.2" stroke-linecap="round"/>
+    </g>
+    <!-- the lit windward edge, which is what stops it reading as a flat noodle -->
+    <path d="M50.4 80.6C41.6 73.6 42.6 65.6 51.6 58.8" fill="none" stroke="#FFE3F1"
+          stroke-width="1.6" stroke-linecap="round" opacity="0.42"/>
+    <circle cx="56" cy="24.5" r="8.5" fill="url(#tip)"/>
+  </g>
+
+  <g id="mono" transform="translate(54 54) scale(0.87) translate(-54 -54)">
+    <path d="M54 84C42 76 42 66 54 58c12-8 12-17.5 1.5-24" fill="none" stroke="#000"
+          stroke-width="10" stroke-linecap="round"/>
+    <path d="M55.5 34c-5-3.2-5-7.5.5-9.5" fill="none" stroke="#000"
+          stroke-width="5.2" stroke-linecap="round"/>
+    <circle cx="56.6" cy="24.2" r="3.4" fill="#000"/>
+  </g>
+</svg>
