@@ -141,7 +141,11 @@ const Art = (() => {
       '<path class="s-line" d="M60 128V78c0-6 4-11 9-13V54h14v11c5 2 9 7 9 13v50" opacity="0.32"/>' +
       '<path class="s-fill" d="M108 128V66c0-7 5-13 11-15V38h16v13c6 2 11 8 11 15v62Z"/>' +
       '<path class="s-line" d="M108 128V66c0-7 5-13 11-15V38h16v13c6 2 11 8 11 15v62"/>' +
-      '<path class="s-accent" d="M127 30c-7-5-7-10 0-15"/>' +
+      /* the same double curl as the mark, leaving the open bottle: a single quarter turn
+         floating clear of the stopper read as a stray bracket rather than as scent */
+      '<path class="s-accent" d="M127 36c-8-6-8-12 0-17 8-5 8-10 1-14"/>' +
+      '<circle class="s-gold" cx="135" cy="10" r="2.2"/>' +
+      '<circle class="s-gold" cx="116" cy="22" r="1.6" opacity="0.55"/>' +
       '<path class="s-line" d="M166 128V88c0-5 3-9 7-11V66h12v11c4 2 7 6 7 11v40" opacity="0.32"/>',
     /* cards, the top one still face down */
     lexicon:

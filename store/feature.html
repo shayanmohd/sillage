@@ -21,7 +21,9 @@
   .copy { position: absolute; left: 486px; top: 150px; width: 500px; }
   h1 { margin: 0; font-size: 112px; line-height: 1; letter-spacing: -0.03em; font-weight: 700;
        text-shadow: 0 6px 34px rgba(20, 4, 15, 0.55); }
-  p { margin: 22px 0 0 4px; font-size: 31px; line-height: 1.24; color: #F3B7D5; max-width: 470px; }
+  /* balanced, so the line does not break with "sense." alone on the second row */
+  p { margin: 22px 0 0 4px; font-size: 31px; line-height: 1.24; color: #F3B7D5; max-width: 430px;
+      text-wrap: balance; }
   .rule { position: absolute; left: 490px; top: 130px; width: 78px; height: 5px; border-radius: 3px;
           background: linear-gradient(90deg, #D8479A, #F5C260); }
 </style>

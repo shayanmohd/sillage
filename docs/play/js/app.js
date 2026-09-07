@@ -15,6 +15,7 @@ const App = (() => {
   let tagTarget = 'entry';
   let tagPick = [];
   let drill = null;
+  let clock = null;                          // the drill interval, held outside the round so it can never outlive it
   let bottleEditing = null;
   let currentBottle = null;
   let currentCard = null;
@@ -96,6 +97,7 @@ const App = (() => {
 
   /* ---------- routing ---------- */
   function show(name, push) {
+    if (view === 'drill' && name !== 'drill') stopTimer();
     if (push && name !== view) stack.push(view);
     if (MAIN.includes(name)) stack = [];
     view = name;
@@ -350,6 +352,7 @@ const App = (() => {
   function startDrill(id) {
     const s = findSession(id);
     if (!s) return;
+    stopTimer();
     const order = s.mats.slice();
     for (let i = order.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -364,7 +367,11 @@ const App = (() => {
     paintDrill();
   }
 
-  function stopTimer() { if (drill && drill.timer) { clearInterval(drill.timer); drill.timer = null; } }
+  /* The interval handle lives here rather than on the round, because a round that has been
+     replaced or left behind still owns a live interval otherwise: it goes on counting down,
+     stepping the jar index of whatever round came after it, and buzzing the phone every
+     twenty seconds from a screen the user is no longer looking at. */
+  function stopTimer() { if (clock) { clearInterval(clock); clock = null; } if (drill) drill.timer = null; }
 
   function runTimer(secs, onDone) {
     stopTimer();
@@ -373,11 +380,12 @@ const App = (() => {
        straight away. Without this the clock reads 0 for its first second. */
     const paintClock = () => { const el = $('#drillClock'); if (el) el.textContent = drill.left; };
     paintClock();
-    drill.timer = setInterval(() => {
+    clock = setInterval(() => {
       drill.left--;
       paintClock();
       if (drill.left <= 0) { stopTimer(); tap(24, 140); onDone(); }
     }, 1000);
+    drill.timer = clock;
   }
 
   function matName(id) { return (Content.material(id) || {}).name || id; }
@@ -636,7 +644,7 @@ const App = (() => {
       return '<div class="bcell' + (worn ? ' worn' : '') + '" data-bottle="' + b.id + '">' +
         Art.bottleMark(b, { tag: 'g' }) +
         '<p class="bn">' + esc(b.name) + '</p>' +
-        '<p class="bh">' + esc(b.house || Content.STATUSES.find(x => x.id === b.status).label) + '</p>' +
+        '<p class="bh">' + esc(b.house || (Content.STATUSES.find(x => x.id === b.status) || Content.STATUSES[0]).label) + '</p>' +
         '<p class="bw">' + (worn ? 'worn today' : bs2.wears ? bs2.wears + (bs2.wears === 1 ? ' wear' : ' wears') : 'never worn') + '</p>' +
         '</div>';
     }).join('');
@@ -687,8 +695,11 @@ const App = (() => {
         Art.monthStrip(s.months, 'Wears by month');
       const ctx = Object.keys(s.contexts).sort((a, b2) => s.contexts[b2] - s.contexts[a]);
       if (ctx.length) {
+        /* A context is normally one of the eight chips, but an export is a plain text file
+           and comes back in with whatever is in it. Fall back to the raw id rather than
+           reading .label off nothing, which took the whole bottle page down. */
         h += '<p class="help">Mostly ' + ctx.slice(0, 2).map(c =>
-          (Content.CONTEXTS.find(x => x.id === c) || {}).label.toLowerCase()).join(' and ') + '.</p>';
+          esc(((Content.CONTEXTS.find(x => x.id === c) || {}).label || c).toLowerCase())).join(' and ') + '.</p>';
       }
     } else {
       h += '<p class="help long" style="margin-top:20px">No wears logged. One tap a day for a fortnight and this page starts telling you things you did not know about yourself.</p>';

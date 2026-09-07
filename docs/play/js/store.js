@@ -25,6 +25,7 @@ const Store = (() => {
   };
 
   let db = load();
+  if (repair()) save();
 
   function load() {
     try {
@@ -44,6 +45,38 @@ const Store = (() => {
     } catch (e) {
       return structuredClone(DEFAULTS);
     }
+  }
+
+  /* 1.0.0 wrote whatever the form handed it, so a shelf restored from that version can still
+     hold a price of -40, a five thousand millilitre bottle, a wear dated in 2099 and a status
+     no screen knows how to name. 1.0.1 refuses all four on the way in, which does nothing for
+     the records already on the phone: this runs the same rules over them once, at boot, and
+     only writes if something actually moved. Nothing is deleted; every value is pulled back
+     into the range the app can draw, and the only thing dropped is a wear pointing at a
+     bottle that is no longer on the shelf, which nothing can show. */
+  function repair() {
+    const now = Date.now();
+    let changed = false;
+    const set = (o, k, v) => { if (o[k] !== v) { o[k] = v; changed = true; } };
+    for (const b of db.bottles) {
+      set(b, 'price', cleanPrice(b.price));
+      set(b, 'sizeMl', cleanSize(b.sizeMl));
+      set(b, 'status', cleanStatus(b.status));
+      const acq = Number(b.acquiredAt);
+      set(b, 'acquiredAt', isFinite(acq) && acq > 0 ? Math.min(acq, now) : now);
+    }
+    const live = new Set(db.bottles.map(b => b.id));
+    for (const w of db.wears) {
+      const at = Number(w.at);
+      set(w, 'at', isFinite(at) && at > 0 ? Math.min(at, now) : now);
+      set(w, 'sprays', cleanSprays(w.sprays));
+    }
+    const keep = db.wears.filter(w => live.has(w.bottleId));
+    if (keep.length !== db.wears.length) { db.wears = keep; changed = true; }
+    for (const e of db.entries) {
+      if (e.bottleId && !live.has(e.bottleId)) set(e, 'bottleId', null);
+    }
+    return changed;
   }
 
   function save() {
@@ -353,6 +386,27 @@ const Store = (() => {
     return Math.max(0, n);
   }
 
+  /** One of the five kinds the shelf knows how to name. An import is a hand editable text
+      file, and a status nothing recognises used to leave the shelf with no label to print. */
+  function cleanStatus(v) {
+    return ['bottle', 'decant', 'sample', 'empty', 'rehomed'].indexOf(v) < 0 ? 'bottle' : v;
+  }
+
+  /** 1 to 1000 ml, or nothing said. */
+  function cleanSize(v) {
+    const n = Number(v);
+    return n > 0 ? Math.max(1, Math.min(1000, Math.round(n))) : null;
+  }
+  /** A wear happened, so it cannot be in the future; a bottle was acquired, so nor can that. */
+  function pastOnly(v) {
+    const n = Number(v);
+    return isFinite(n) && n > 0 ? Math.min(n, Date.now()) : Date.now();
+  }
+  /* A function declaration, not a const arrow: repair() runs while this module is still
+     being evaluated, so an arrow assigned further down is in its temporal dead zone and
+     the whole store throws on any device that has ever logged a wear. */
+  function cleanSprays(v) { const n = Number(v); return n > 0 ? Math.min(99, Math.round(n)) : null; }
+
   function addBottle(o) {
     const name = String(o.name || '').trim();
     if (!name) return null;
@@ -360,9 +414,9 @@ const Store = (() => {
       id: uid('b'),
       name,
       house: String(o.house || '').trim(),
-      sizeMl: Number(o.sizeMl) > 0 ? Math.min(1000, Math.round(Number(o.sizeMl))) : null,
-      status: o.status || 'bottle',
-      acquiredAt: o.acquiredAt || Date.now(),
+      sizeMl: cleanSize(o.sizeMl),
+      status: cleanStatus(o.status),
+      acquiredAt: pastOnly(o.acquiredAt),
       addedAt: Date.now(),
       price: cleanPrice(o.price),
       notes: Array.isArray(o.notes) ? o.notes : [],
@@ -380,7 +434,9 @@ const Store = (() => {
     const b = bottle(id); if (!b) return null;
     Object.assign(b, patch);
     b.price = cleanPrice(b.price);
-    b.sizeMl = Number(b.sizeMl) > 0 ? Math.min(1000, Math.round(Number(b.sizeMl))) : null;
+    b.sizeMl = cleanSize(b.sizeMl);
+    b.acquiredAt = pastOnly(b.acquiredAt);
+    b.status = cleanStatus(b.status);
     save();
     return b;
   }
@@ -397,14 +453,12 @@ const Store = (() => {
      days-since goes negative, the month strip lights up January, and "unworn" inverts. */
   function logWear(bottleId, o) {
     if (!bottle(bottleId)) return null;
-    const asked = (o && o.at) || Date.now();
-    const sprays = Number(o && o.sprays);
     const w = {
       id: uid('w'),
       bottleId,
-      at: Math.min(asked, Date.now()),
+      at: pastOnly(o && o.at),
       contexts: (o && o.contexts) || [],
-      sprays: sprays > 0 ? Math.min(99, Math.round(sprays)) : null
+      sprays: cleanSprays(o && o.sprays)
     };
     db.wears.push(w);
     save();
@@ -559,16 +613,22 @@ const Store = (() => {
        reissued on the way in. Restoring a backup used to drop every "wearing" link
        on the floor because the entries were rebuilt before this map existed. */
     const map = {};
-    const seenB = new Set(db.bottles.map(b => ((b.house || '') + '|' + b.name).toLowerCase()));
+    /* Matching on house and name keeps a second import of the same file from doubling the
+       shelf. Matching on it as a set threw away the second of two bottles that genuinely
+       share a name, which a shelf with two unhoused decants really does have, so the match
+       is counted: the nth "Rose" in the file pairs with the nth "Rose" already here, and
+       any beyond that are new. */
+    const bkey = b => ((b.house || '') + '|' + (b.name || '')).toLowerCase();
+    const have = {};
+    for (const b of db.bottles) (have[bkey(b)] || (have[bkey(b)] = [])).push(b.id);
+    const taken = {};
     for (const b of (j.bottles || [])) {
-      const k = ((b.house || '') + '|' + (b.name || '')).toLowerCase();
-      if (seenB.has(k)) {
-        const ex = db.bottles.find(x => ((x.house || '') + '|' + x.name).toLowerCase() === k);
-        if (ex) map[b.id] = ex.id;
-        continue;
-      }
+      const k = bkey(b);
+      const i = (taken[k] = (taken[k] || 0) + 1) - 1;
+      const ex = (have[k] || [])[i];
+      if (ex) { map[b.id] = ex; continue; }
       const nb = addBottle(b);
-      if (nb) { map[b.id] = nb.id; seenB.add(k); added++; }
+      if (nb) { map[b.id] = nb.id; (have[k] || (have[k] = []))[i] = nb.id; added++; }
     }
     const seenE = new Set(db.entries.map(e => e.at + '|' + e.text));
     for (const e of j.entries) {

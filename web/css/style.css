@@ -149,12 +149,15 @@ body.has-tabs { --tabh: calc(60px + var(--sab, 0px)); }
 @keyframes rise { 0% { opacity: 0; transform: translateY(3px); } 40% { opacity: .85; } 100% { opacity: 0; transform: translateY(-9px); } }
 
 /* the head of every main screen: the trail rising out of the rule under the title */
-.mast { position: relative; border-bottom: 0; padding-bottom: 26px; }
+/* .topbar sets padding with a shorthand further down the file, so the mast has to carry
+   both classes to win it back. Without that the rule sat 26px too high and the trail ran
+   straight through the button in the top right corner of Train, Shelf and Lexicon. */
+.topbar.mast { position: relative; border-bottom: 0; padding-bottom: 26px; }
 .mast .mastart {
   position: absolute; left: 0; right: 0; bottom: 0; height: 26px;
   pointer-events: none; opacity: .5; display: block;
 }
-.mast.tall { padding-bottom: 34px; }
+.topbar.mast.tall { padding-bottom: 34px; }
 .mast.tall .mastart { height: 34px; opacity: 1; }
 .mast > div, .mast > button { position: relative; z-index: 1; }
 .trail.rule { width: 100%; height: 100%; overflow: hidden; }
@@ -512,7 +515,8 @@ select {
 .take { border-left: 2px solid var(--accent); padding-left: 14px; margin: 14px 0;
          background: linear-gradient(90deg, var(--accent-wash), rgba(0,0,0,0) 60%); }
 .take p { font-family: var(--serif); font-size: 17px; line-height: 1.45; margin: 0 0 6px; }
-.take p span { font-family: var(--sans); font-size: 11px; letter-spacing: .13em; text-transform: uppercase; color: var(--ink-faint); display: block; }
+/* --ink-faint measures 4.49:1 on this tinted block, which is not AA. --ink-soft is 5.9:1. */
+.take p span { font-family: var(--sans); font-size: 11px; letter-spacing: .13em; text-transform: uppercase; color: var(--ink-soft); display: block; }
 
 .bighead { display: flex; gap: 16px; align-items: flex-end; margin-bottom: 6px; }
 .bighead .bottle { width: 76px; height: 118px; flex: none; }
@@ -679,5 +683,7 @@ select {
 /* The drill runner holds its footer at the bottom of the screen when a round is
    short, and scrolls normally when it is not. */
 #drillBody { display: flex; flex-direction: column; }
-#drillBody .sofar { margin-top: auto; }
+/* pinned to the bottom this left a wide empty band mid screen on a tall phone, so it just
+   follows the question now and the empty space collects at the foot where it belongs */
+#drillBody .sofar { margin-top: 34px; }
 #drillBody .teachline { margin-top: 16px; }
